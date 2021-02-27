@@ -15,9 +15,10 @@ url <- paste(
   format(date, "%Y/%m/%d"), sep='')
 
 wiki.server.response = GET(url)
-wiki.response.status = status_code(wiki.server.response)
+wiki.response.status = status_code(wiki.server.response) # 200 all good
 wiki.response.body = content(wiki.server.response, 'text')
 
+# check if the url is correct
 if (wiki.response.status != 200){
   print(paste("Recieved non-OK status code from Wiki Server: ",
              wiki.response.status,
@@ -26,7 +27,7 @@ if (wiki.response.status != 200){
              ))
 }
 
-# Save Raw Response and upload to S3
+# Save Raw Response and upload to S3 (first set the working direcory within the correct folder)
 RAW_LOCATION_BASE='data/raw-edits'
 dir.create(file.path(RAW_LOCATION_BASE), showWarnings = FALSE)
 
@@ -38,10 +39,12 @@ dir.create(file.path(RAW_LOCATION_BASE), showWarnings = FALSE)
 # `RAW_LOCATION_BASE` under the name `raw-edits-YYYY-MM-DD.txt`,
 # i.e: `raw-edits-2021-01-23.txt`.
 
-
-
-
-
+#### ANSWER ####
+raw.output.filename = paste("raw-edits-", format(date, "%Y-%m-%d"), '.txt',
+                            sep='')
+raw.output.fullpath = paste(RAW_LOCATION_BASE, '/', 
+                            raw.output.filename, sep='')
+write(wiki.response.body, raw.output.fullpath)
 
 ########
 # LAB  #
@@ -54,16 +57,15 @@ dir.create(file.path(RAW_LOCATION_BASE), showWarnings = FALSE)
 # After you've uploaded it, make sure it's there
 # by taking a look at the AWS Web Console
 
-#> BUCKET="zoltan-sandbox"
+# > BUCKET="zoltan-sandbox"
 
-## FILL IN AWS SETUP STEPS
-#> put_object(file = "{{ ADD LOCAL FILE PATH }}",
-#>            object = "{{ ADD FOLDER AND FILE NAME HERE in a form of FOLDER/FILE_NAME }}",
-#>            bucket = BUCKET,
-#>            verbose = TRUE)
-
-
-
+# FILL IN AWS SETUP STEPS
+put_object(file = raw.output.fullpath,
+          object = paste('de4/raw/', 
+                         raw.output.filename,
+                         sep = ""),
+         bucket = bucket_name,
+          verbose = TRUE)
 
 
 # Parse the response and write the parsed string to "Bronze"
@@ -106,6 +108,6 @@ put_object(file = json.lines.fullpath,
            object = paste('de4/edits/', 
                           json.lines.filename,
                           sep = ""),
-           bucket = BUCKET,
+           bucket = bucket_name,
            verbose = TRUE)
 
